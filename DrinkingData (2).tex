@@ -1,0 +1,590 @@
+%% Drinking Data: Econometric Analysis of the Impacts of Data Centers and AI on Water Usage
+%% Texas and California focus, spatial econometrics, water-energy nexus
+%% Companion paper to Golden, Balasubramanian, and Balasubramanian (Energy paper)
+%%
+%% Author: Dana Golden
+%% Template builds on the Energy_CAS paper structure
+%%
+
+\documentclass[11pt, letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{threeparttable}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{bm}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{rotating}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+\title{\textbf{Drinking Data: A Spatial Econometric Analysis of the Impacts of Data Centers and AI on Water Resources in Texas and California}}
+\author{Dana Golden and Lav R.\ Varshney \thanks{Department of Economics, Stony Brook University. Email: \texttt{dana.golden@stonybrook.edu}. The author thanks colleagues at Stony Brook and Argonne National Laboratory for valuable discussions. All errors are the author's.}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent The rapid build-out of artificial intelligence (AI) infrastructure has shifted attention to data centers as a major and underregulated claimant on freshwater resources. Existing assessments rely overwhelmingly on engineering-based water-usage-effectiveness (WUE) coefficients applied to facility-level load estimates, an approach that ignores the spatial spillovers, hydrologic feedbacks, and indirect consumption through the water--energy nexus that drive water-system outcomes. This paper provides the first causal, spatially explicit estimates of how AI data centers affect direct water withdrawals, consumptive use, and wastewater discharge in Texas and California -- the two leading Western U.S. data center markets, each with disaggregated water-use reporting and an independent wholesale electricity market (ERCOT and CAISO, respectively). We exploit the staggered release of frontier AI models as plausibly exogenous shocks to compute activity at hyperscaler-owned facilities, and estimate a spatial difference-in-differences (SDID) model that decomposes treatment effects into direct local impacts and indirect spillovers through hydrologically and hydraulically connected units. The micro estimates are then scaled to the continental hydrologic level using NOAA's National Water Model (NWM) and propagated through the broader economy using the Water Economy Simulation Tool (WEST), enabling counterfactual analysis of (i) data center water-use efficiency improvements, (ii) siting restrictions and moratoria, (iii) geographic reallocation of compute, (iv) water-scarcity pricing, and (v) changes at the water--energy nexus such as shifts in cooling technology and grid generation mix. We compare the econometric impacts directly to literature-derived WUE estimates and discuss the sources of divergence. As a primarily empirical companion to a parallel energy-focused paper, this study provides the missing spatial-economic foundation needed to evaluate the water externalities of the AI build-out and the policy tools available to address them.
+\end{abstract}
+
+\noindent \textbf{Keywords:} Artificial intelligence; Data centers; Water economics; Spatial econometrics; Difference-in-differences; Water--energy nexus; National Water Model; WEST.
+
+\noindent \textbf{JEL Codes:} Q25, Q41, Q54, C21, L86, R11.
+
+\setstretch{1.15}
+
+\section{Introduction}
+\label{sec:introduction}
+
+Two facts about U.S.\ data center infrastructure have, until recently, been treated as separate questions. The first is the rapid growth in electricity demand from AI workloads: data centers have expanded from roughly $1.9\%$ to $4.4\%$ of total U.S.\ electricity demand over the past six years, and projections range from $6.7\%$ to $12\%$ of national demand by 2030 \citep{EPRI2024}. The second is that data centers are increasingly being sited in water-stressed regions of the American West, where evaporative cooling competes for the same supplies that support irrigated agriculture and municipal use. The literature has only recently begun to draw these together under the heading of the ``hydro-digital paradox'' \citep{natarajan2025hydro}, with most existing quantitative work relying on engineering-based water-usage-effectiveness (WUE) coefficients applied to facility load estimates \citep{li2023making,mytton2021data,lei2025water,shumba2025water,herrera2025sustainable}.
+
+This paper makes three contributions. First, it provides the first causal estimates of how the release and operation of frontier AI models affect direct water consumption and wastewater discharge in the two leading Western U.S.\ data center markets: Texas and California. Both states report disaggregated water-use data by sector, both contain a substantial share of the national hyperscaler footprint, and both operate independent or quasi-independent wholesale electricity markets (ERCOT and CAISO) that allow indirect, electricity-mediated water consumption to be attributed to specific generation portfolios. Second, the paper develops a spatial difference-in-differences (SDID) framework that is appropriate to water as an outcome: unlike electricity, water flows along catchments and aquifers, and treatment at one data center necessarily spills into the water budgets of hydrologically and hydraulically connected units. Third, the paper links the micro-econometric estimates to two existing macroeconomic and hydrologic tools -- NOAA's National Water Model \citep{cosgrove2024nwm} for continental-scale hydrologic propagation, and the Water Economy Simulation Tool \citep{reimer2020west} for general-equilibrium economic impacts -- in order to evaluate short- and long-run policy counterfactuals.
+
+This paper is the water-focused companion to a parallel paper on the electricity-market impacts of AI \citep{Golden_Energy_companion}. The energy companion estimates causal effects of model releases on power quality, fossil generation, and wholesale prices using staggered difference-in-differences and instrumental variables. The present paper inherits the same treatment definition and data-center crosswalk from that companion in order to maintain comparability and to allow the joint analysis of the water--energy nexus. The two papers differ substantively in three ways. (i) The outcomes here are spatially diffusive rather than electrical -- water moves through watersheds, not through nodes -- so the econometric methodology must explicitly model spillovers. (ii) The geographic scope is restricted to Texas and California rather than the full Eastern Interconnection / ERCOT footprint, both because of data-quality constraints on water reporting and because these two states cover the politically and hydrologically most consequential portion of the Western U.S.\ data center build-out. (iii) The counterfactuals span both physical hydrology and economy-wide adjustment, requiring linkage to NWM and WEST rather than to grid-dispatch models.
+
+The empirical strategy proceeds in three stages. In the \emph{micro} stage, We estimate a spatial difference-in-differences model in which units are USGS Hydrologic Unit Code (HUC-8 / HUC-12) sub-basins or county-by-water-system observations in Texas and California. Treated units contain at least one Aterio-classified AI data center owned by or contracted to one of four hyperscalers (Meta, Microsoft, Amazon, Google; Anthropic linked to Google as in the energy companion). Treatment events are staggered AI model releases drawn from the Epoch database, and outcomes are direct water withdrawal and consumption (Texas Water Development Board and California Water Boards), wastewater discharge (NPDES eDMR), and indirect water consumption imputed from generation-mix data via published water-intensity factors \citep{jin2019water}. The SDID specification follows \citet{delgado2015did} and the staggered-spillover extension of \citet{butts2023did}, with the spatial weights matrix constructed from hydrologic connectivity rather than from Euclidean distance alone.
+
+In the \emph{meso} stage, We use the estimated direct and spillover treatment effects, together with my data-center inventory and published projections of data-center capacity additions, as forcings on the NWM hydrofabric. This yields short- and long-run projections of streamflow, evapotranspiration, and groundwater storage anomalies attributable to AI infrastructure at the continental scale, with finer resolution in Texas and California.
+
+In the \emph{macro} stage, the same forcings are passed to the WEST framework \citep{reimer2020west} to evaluate economy-wide impacts on agriculture, energy development, and the broader macroeconomy. We run the WEST simulations twice -- once using the econometric estimates produced here, and once using the literature-derived WUE coefficients -- in order to discipline both estimates and to surface the sources of divergence between the engineering and econometric approaches.
+
+The counterfactuals build on this three-stage architecture. They include: (i) cooling-technology efficiency improvements (free cooling, liquid cooling, water-positive commitments); (ii) policy-induced limits on data-center siting in stressed basins (moratoria, water-availability conditioning of permits); (iii) geographic reallocation of compute from water-stressed to water-abundant regions; (iv) water-scarcity pricing and tradable water rights; and (v) changes at the water--energy nexus, including shifts in grid generation mix and behind-the-meter generation choices identified in the energy companion.
+
+The remainder of the paper is organized as follows. Section~\ref{sec:litreview} reviews the relevant literatures on water economics, the water--energy nexus, and the techno-economic AI water footprint. Section~\ref{sec:background} describes the Texas and California institutional context. Section~\ref{sec:data} describes the data and constructs the analytic panel. Section~\ref{sec:methods} develops the spatial difference-in-differences specification, the techno-economic WUE accounting, and the comparison framework. Section~\ref{sec:macro} describes the NWM and WEST linkages used to scale the micro estimates. Section~\ref{sec:robustness} details validation of the identifying assumptions and robustness checks. Section~\ref{sec:counterfactuals} presents the counterfactual exercises. Section~\ref{sec:conclusion} concludes; Section~\ref{sec:discussion} discusses limitations and an agenda for future work.
+
+
+\section{Literature Review}
+\label{sec:litreview}
+
+This paper draws on, and aims to bridge, three literatures that have historically engaged only at the margins: the econometrics of water demand and allocation, the water--energy nexus, and the techno-economic analysis of data center and AI water consumption.
+
+\subsection{Econometrics of Water}
+
+Water is a difficult commodity for empirical economics. Property rights regimes differ sharply across states, prices frequently fail to reflect marginal scarcity, and quantity data are released on long lags relative to other infrastructure data \citep{hanemann2006economic,leflaive2024economics}. These institutional features are not frictions to be abstracted away; they shape the identification strategy and constrain what can be learned from observational data.
+
+Recent work has used quasi-experimental variation to credibly estimate water demand and the welfare effects of water markets. \citet{bruno2021missing} exploit the introduction of volumetric pricing for California agricultural groundwater to estimate demand elasticities, finding substantial responsiveness that flat-rate or unpriced regimes had masked. \citet{hagerty2022adaptation} studies adaptation by irrigated agriculture to surface-water scarcity, documenting the margins along which producers adjust. \citet{rafey2023droughts} provides a structural analysis of reallocation through California water markets during droughts, quantifying the welfare gains from market trading relative to administrative allocation. \citet{zhao2024water,zhao2024impact,liu2025does} provide complementary international evidence from Australia and China. The consistent theme is that water demand is more elastic than nominal pricing structures suggest, that markets where they exist can deliver substantial efficiency gains, and that the relevant elasticities and welfare effects are highly heterogeneous across users and basins.
+
+\subsection{The Water--Energy Nexus}
+
+Thermoelectric generation is among the largest water-using sectors in most economies, both through cooling demands and through the water requirements of fuel extraction and processing \citep{jin2019water}. \citet{jin2019water} provide a global meta-analysis of water-use coefficients across electricity technologies, distinguishing withdrawal from consumption and varying by cooling-system type. Their estimates are the standard inputs for lifecycle assessments of any electricity-intensive activity, including AI.
+
+\citet{eyer2018does} provide causal evidence that drought shifts the U.S.\ generation mix toward fossil fuels by depressing hydropower output, with implications for both prices and emissions. \citet{harris2024drought} extends the analysis to investment decisions, showing that water stress affects long-run capacity expansion and technology choice; \citet{harris2024farmer} examines the agricultural side of the same nexus through farmer responses to Colorado River reductions. The picture that emerges is one of bidirectional dependence: electricity systems require water, water systems require energy, and shocks in either propagate through general equilibrium.
+
+For AI infrastructure the implication is severe. Data centers are simultaneously water-intensive and electricity-intensive, and increasingly sited in regions where the water--energy system is already stressed. Indirect water consumption -- the water embedded in the electricity that powers a data center -- often exceeds direct consumption from cooling \citep{jin2019water,EESIWater2025}, particularly when the marginal generator is thermoelectric. This implies that water-impact estimates that consider only on-site cooling will systematically understate the AI water footprint.
+
+\subsection{Techno-economic Estimates of AI Water Use}
+
+A separate, primarily engineering literature attempts to quantify the direct water consumption of data centers and AI workloads using WUE coefficients (liters per kWh) combined with estimates of compute load. \citet{mytton2021data} provides an early assessment of cooling-system water requirements and the lack of facility-level transparency. \citet{li2023making} drew wider attention to the issue with their analysis of large language model water footprints, estimating that training GPT-3 consumed on the order of $700{,}000$ liters of on-site freshwater alone. \citet{lei2025water} conduct a systematic review of determinants of data-center water use, identifying cooling technology, climate, and workload as the principal factors. \citet{shumba2025water} contribute one of the few publicly available WUE datasets, focused on African facilities. \citet{herrera2025sustainable} develop scenario-based forecasts of AI water footprints, attempting to bound consumption as the industry scales. \citet{xiao2025environmental} examine net-zero pathways for AI servers with attention to both direct and indirect effects. The Ceres report \citep{ceres_drained_by_data_2025} aggregates facility-level disclosures into a national accounting; \citet{privette2025data} call for greater transparency in water reporting. \citet{garcia2024ai} reviews how the U.S.\ regulatory landscape -- including the Supreme Court's \emph{Loper Bright} decision -- may affect water-use regulation for data centers.
+
+This literature has been productive but is limited along three dimensions that the present paper addresses. First, WUE coefficients are typically applied as fixed parameters; they do not respond to local water prices, scarcity, or political constraints. Second, indirect consumption through the electricity system is generally treated cursorily, with simplified grid-emissions-factor analogues rather than the localized causal estimates that water markets require. Third, the spatial dimension -- where data centers locate relative to water-stressed basins, and how their consumption affects neighboring users -- is acknowledged but rarely modeled with the tools available in spatial econometrics. \citet{iman2025hidden} and \citet{friedmann2024data} survey the broader landscape and reach similar conclusions.
+
+\subsection{Sustainable Computing and Microgrid Approaches}
+
+A related computer-science literature analyzes data-center energy systems, including microgrids and water-aware scheduling \citep{brannvall2020edge,daw2018energy,zhu2022energy,cui2024stochastic,hao2024joint,karki2023techno}. \citet{kilian2025choosing} discuss simulation choices for such systems; \citet{ale2025laboratory} demonstrate laboratory approaches to water-system resilience. These engineering frameworks could be extended to incorporate realistic water pricing and scarcity constraints; in turn, the econometric estimates produced here provide empirical disciplining for the parameters those frameworks use.
+
+\subsection{Virtual Water and Political Economy}
+
+The concept of \emph{virtual water trade} -- the water embedded in traded goods and services \citep{aldaya2023towards,kshetry2017foodsheds} -- applies naturally to AI services. A user in a water-rich region querying a model running on servers in Arizona or Texas effectively imports the water consumed in cooling and in generating the electricity used. This framework also surfaces distributional questions: water-stressed regions may effectively export their scarce resources to serve users elsewhere. The political-economy dimension is not hypothetical. The 2025 Georgia Public Service Commission election, organized opposition to data-center build-outs in northern Virginia, and emerging moratoria in rural Ohio and Iowa all indicate that water and power conflicts surrounding data centers are increasingly salient politically \citep{OhioSignal2025,WFMJ2025,LandHand2025}. \citet{natarajan2025hydro} frame the resulting tension as a ``hydro-digital paradox.''
+
+\subsection{Where the Energy Companion Sits}
+
+The parallel energy companion \citep{Golden_Energy_companion} estimates causal effects of staggered AI model releases on power quality, fossil fuel generation, and wholesale prices using stacked difference-in-differences and instrumental variables. That paper documents that AI demand significantly increases fossil generation and that wholesale electricity prices increase up to $25\%$ in treated PJM zones, with on-site colocated generation substantially mitigating local grid impacts. Because indirect water consumption through electricity generation is potentially first-order in the data-center water footprint, the energy companion's estimates of fossil generation response are direct inputs into the indirect-water accounting of the present paper. To the extent AI data centers raise marginal fossil dispatch, they also raise marginal water consumption by thermoelectric cooling and fuel processing -- the direction and magnitude of which We quantify explicitly below.
+
+\section{Industry Background}
+\label{sec:background}
+
+\subsection{Why Texas and California}
+
+I focus on Texas and California for four reasons.
+
+\textbf{Data-center concentration.} Texas, particularly the Dallas--Fort Worth, San Antonio, and West Texas corridors, and California, particularly Santa Clara and Los Angeles, host two of the largest and most rapidly growing concentrations of hyperscale data centers in the Western United States. New large-scale AI-focused facilities are being announced in both states regularly, and both are explicitly courted in the industry's siting analyses.
+
+\textbf{Independent electricity markets.} ERCOT (Texas) and CAISO (California) are independent or quasi-independent ISOs, allowing electricity-mediated indirect water consumption to be attributed to identifiable generation portfolios. ERCOT operates almost entirely outside the federal jurisdiction of FERC; CAISO is bounded by Western Interconnection seams that are operationally significant. This is in contrast to states embedded in PJM or MISO, where attribution of marginal generation to a single state is more contestable. The clean separation matters for both identification (treated and control units sit in well-defined markets) and for counterfactual policy analysis (state policy interventions can be modeled within a single ISO).
+
+\textbf{Water-use data quality.} Both states publish water-use data disaggregated by sector at a granularity not available in most other states. The Texas Water Development Board (TWDB) publishes annual water-use surveys broken down by municipal, industrial, manufacturing, irrigation, livestock, mining, and steam-electric categories at the county level, with permitted withdrawal data from major water-rights holders. California's Department of Water Resources (DWR) and State Water Resources Control Board (SWRCB) publish parallel disaggregations, with additional granularity through the eWRIMS water-rights database and the Sustainable Groundwater Management Act (SGMA) basin reporting. This is essential: identification requires being able to observe water use \emph{by category} rather than only in aggregate.
+
+\textbf{Water stress and hydrologic diversity.} The two states span the most relevant hydrologic regimes for Western data-center water analysis: Texas's transition from humid East to arid West, including the Edwards and Ogallala aquifers, and California's snowmelt-dependent surface system with extensive groundwater sub-basins under SGMA management. Together they cover a substantial portion of the U.S.\ water-stress gradient and provide variation that allows treatment effects to be identified across hydrologic contexts.
+
+\subsection{Cooling and Direct Water Use}
+
+The dominant cooling architecture for hyperscale data centers in the Western U.S.\ remains evaporative -- either through cooling towers or adiabatic systems -- with growing but still partial adoption of air-cooled, free-cooled, and liquid-cooled configurations. Evaporative systems consume water through evaporation and through blowdown discharge required to manage cycle-of-concentration buildup. WUE is conventionally reported in liters of water consumed per kWh of IT energy; published values in the literature span roughly $0.1$ to $1.8$ L/kWh depending on cooling technology, climate, and workload \citep{lei2025water,mytton2021data}, with hyperscaler-disclosed values commonly clustered around $0.3$--$0.6$ L/kWh on a fleet-average basis. WUE is, however, an annualized average; instantaneous water draw scales with ambient wet-bulb temperature and is highest precisely when local water supplies are most stressed.
+
+\subsection{Indirect Water Use Through the Grid}
+
+Indirect water consumption through electricity is mediated by the cooling technology and fuel mix of the marginal generator at the time of incremental load. \citet{jin2019water} report water-consumption factors for thermoelectric generation in the range $0.4$--$4.5$ L/kWh for combined-cycle natural gas with various cooling types, and substantially higher for once-through-cooled coal and nuclear. In ERCOT, the marginal generator for incremental data-center load is overwhelmingly combined-cycle natural gas, with substantial wind during off-peak hours; in CAISO, the marginal generator is most often combined-cycle gas, with seasonal hydropower and increasing solar curtailment. Mapping AI-induced demand growth onto these marginal water-consumption factors gives the indirect water footprint of the AI build-out, which is plausibly of the same order as the direct cooling footprint and may exceed it.
+
+\subsection{Wastewater and Quality Externalities}
+
+Direct water consumption is only one dimension of the data-center water footprint. Blowdown discharge from cooling towers introduces thermal and chemical loadings (conductivity, chlorides, biocides) into local wastewater systems. NPDES-permitted facilities discharge effluent that is reported through EPA's electronic Discharge Monitoring Reports (eDMR). We therefore include wastewater discharge as a co-outcome alongside withdrawal and consumption.
+
+\subsection{Institutional Context: Water Rights and Allocation}
+
+Texas water rights operate under a hybrid of prior-appropriation surface rights and rule-of-capture groundwater rights, modified by groundwater conservation districts. California operates a mixed system of riparian and appropriative surface rights overlaid by SGMA for groundwater. Both systems generate institutional frictions that depart from frictionless allocation: senior rights holders are protected from curtailment, groundwater is incompletely metered, and prices for municipal-industrial water typically embed substantial cross-subsidies. These features are central to both identification (variation in administrative curtailment can be used as a robustness check) and to the counterfactual analysis (water-scarcity pricing is not currently in force in either state).
+
+
+\section{Data}
+\label{sec:data}
+
+\subsection{Dataset Construction}
+\label{sec:datasetconstruction}
+
+The analytic panel links four classes of data: (i) data-center inventories and AI workload identification, (ii) water use, withdrawal, and discharge, (iii) electricity dispatch and generation mix, and (iv) climate, hydrology, and spatial controls. The treatment definition exactly mirrors the energy companion to preserve cross-paper comparability.
+
+\paragraph{Data-center inventory and AI classification.} Following the energy companion, the universe of data centers is drawn from the Aterio commercial database, which provides facility-level information on location, operator, ownership, capacity (MW), commissioning and expansion dates, cooling-system characteristics (where reported), and -- critically -- a recently introduced classification of facilities by primary workload, including a designation for AI-focused facilities. This allows me to restrict the treated set to facilities whose workload profile is consistent with AI training and inference, rather than treating all data centers homogeneously. We retain facilities in Texas and California owned by or contracted to the four major hyperscalers (Meta, Microsoft, Amazon, Google; Anthropic linked to Google through cloud partnership). Facility-to-utility and facility-to-water-system mapping uses ZIP-to-PWS crosswalks from EPA's Safe Drinking Water Information System (SDWIS) for municipally supplied facilities and identified self-supply withdrawals for facilities holding direct water rights.
+
+\paragraph{AI model release events.} Treatment events are drawn from the Epoch AI database, which catalogs frontier model releases with parameter counts, training compute (FLOPs), publication date, and developing institution. As in the energy companion, We use publicly announced model releases as the observable treatment anchor, recognizing that the release date is a noisy proxy for the unobserved training window. The set of treatment events is restricted to models attributable to the four hyperscalers above.
+
+\paragraph{Direct water use: Texas.} Annual water-use estimates by sector, county, and major user are obtained from the Texas Water Development Board's Water Use Survey. TWDB reports broken-out withdrawals by municipal, manufacturing, mining, steam-electric, irrigation, and livestock categories, with self-reported quantities from major water-rights holders. Permitted withdrawals and surface-water-rights records are obtained from the Texas Commission on Environmental Quality (TCEQ) Water Rights Database and from groundwater conservation district reporting. For facilities served by municipal utilities, water consumption is imputed through utility-level monthly billing where available (a subset of utilities publish these data) and through TCEQ system-level reporting otherwise.
+
+\paragraph{Direct water use: California.} The California eWRIMS Water Rights Information Management System provides records of water-rights holders, permitted quantities, and reported diversions. The State Water Resources Control Board's California Open Data Portal publishes urban water supplier reports under SB-X7-7 and SBs 555/606, including production and consumption by water supplier and by month. The Department of Water Resources publishes the California Water Plan and SGMA basin annual reports, including pumping data for managed groundwater basins. The U.S.\ Geological Survey's National Water Use Information Program (NWUIP) provides county-level estimates by sector on a 5-year cycle, used here as a cross-check rather than as a primary source given the temporal resolution.
+
+\paragraph{Wastewater discharge.} Wastewater discharge is constructed from EPA's electronic Discharge Monitoring Reports (eDMR) and from the Integrated Compliance Information System (ICIS-NPDES). We retain facility-month observations for NPDES-permitted dischargers within hydrologic units containing AI data centers, with parameters including flow (MGD), total dissolved solids, chlorides, and temperature where reported.
+
+\paragraph{Electricity dispatch and generation mix.} ERCOT and CAISO operational data (hourly dispatch by fuel type, system marginal price, ancillary service prices) are obtained from each ISO's public data feeds. Generator-level operating data, including heat rates, fuel type, and cooling-system type, are obtained from EIA Forms 860 and 923. Thermoelectric cooling and water-use estimates by plant are obtained from EIA Form 923 Schedule 8 (thermoelectric cooling data). Indirect water consumption is constructed by combining marginal-generation mix at the time of incremental data-center load with the water-consumption factors of \citet{jin2019water}.
+
+\paragraph{Climate, hydrology, and controls.} Climate variables (temperature, dewpoint, precipitation, wet-bulb temperature, PDSI) are drawn from Meteostat and PRISM. Hydrologic variables (streamflow, groundwater levels) come from USGS NWIS. The NWM CONUS hydrofabric (HUC-8 and HUC-12 sub-basins, NHDPlus reaches) provides the spatial backbone for both the SDID specification and the meso-scale propagation in Section~\ref{sec:macro}. Water-stress indicators are drawn from WRI Aqueduct.
+
+\paragraph{Spatial weights.} The spatial weights matrix $W$ is constructed from hydrologic and hydraulic connectivity rather than from Euclidean distance alone. Two units are connected with positive weight if (i) they share a HUC-8 boundary, (ii) one is downstream of the other along an NHDPlus flowline, or (iii) they share a managed groundwater sub-basin under SGMA (California) or a groundwater conservation district (Texas). Row-standardized $W$ is the baseline; robustness uses alternative weights including inverse-distance, $k$-nearest-neighbor, and pure flow-direction matrices, as discussed in Section~\ref{sec:robustness}.
+
+\subsection{Descriptive Statistics and Visualization}
+\label{sec:descstats}
+
+Descriptive statistics and visualization will be reported in tables and figures created from the constructed panel. Placeholder tables are below; numerical entries will be filled in from the analytic dataset and are not pre-specified here.
+
+\begin{table}[htbp]
+\centering
+\caption{Data sources for each analysis question.}
+\label{tab:DataSources}
+\begin{threeparttable}
+\begin{tabularx}{\linewidth}{lXX}
+\toprule
+\textbf{Source} & \textbf{Content} & \textbf{Use in Analysis} \\
+\midrule
+\multicolumn{3}{l}{\textit{Q1: Spatial DiD on direct water consumption / wastewater}} \\
+\midrule
+Aterio & Data-center locations, ownership, capacity, AI classification, cooling type & Define treated set; link AI model releases \\
+TWDB Water Use Survey & Sectoral water use by county (TX) & Outcome: direct water use \\
+CA SWRCB / DWR / eWRIMS & Sectoral water use, urban supplier data, water rights (CA) & Outcome: direct water use \\
+EPA eDMR / ICIS-NPDES & Facility-month wastewater discharge & Outcome: wastewater externality \\
+USGS NWIS & Streamflow, groundwater levels & Outcome \& controls; spatial weights \\
+USGS NWUIP & County-by-sector water use (5-year) & Cross-check on primary state data \\
+\midrule
+\multicolumn{3}{l}{\textit{Q2: Indirect water use via the grid}} \\
+\midrule
+ERCOT \& CAISO & Hourly dispatch by fuel type, system prices & Identify marginal generator at incremental load \\
+EIA Form 860 / 923 & Generator-level operating data, cooling type & Match generators to water-use coefficients \\
+\citet{jin2019water} & Water-consumption factors by technology/cooling & Convert MWh to L of indirect water \\
+\midrule
+\multicolumn{3}{l}{\textit{Q3: Macro \& counterfactuals}} \\
+\midrule
+NWM (Cosgrove et al.) & CONUS hydrologic forcing/forecasting & Scale micro estimates to streamflow / storage \\
+WEST (Reimer et al.) & Water economy simulation tool & Macro and sectoral economic propagation \\
+WRI Aqueduct, PRISM, Meteostat & Stress indicators, climate & Controls and scenario design \\
+Epoch AI & Model releases, FLOPs, parameters & Treatment events; scaling counterfactuals \\
+\bottomrule
+\end{tabularx}
+\end{threeparttable}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Treated and control unit construction (panel structure).}
+\label{tab:UnitConstruction}
+\begin{threeparttable}
+\begin{tabularx}{\linewidth}{lXX}
+\toprule
+\textbf{Specification} & \textbf{Treated unit} & \textbf{Control set} \\
+\midrule
+SDID (HUC-8 panel) & HUC-8 sub-basin containing at least one AI-classified hyperscaler facility in event window & Other TX/CA HUC-8 units with no AI data center in event window \\
+SDID (county-by-supplier panel) & County $\times$ utility cell with an AI-classified facility in supplier territory & Other county $\times$ utility cells without AI exposure in event window \\
+SDID (HUC-12 robustness) & HUC-12 sub-basin containing an AI-classified facility & Other HUC-12 units within the same HUC-8 not containing AI facilities \\
+\bottomrule
+\end{tabularx}
+\begin{tablenotes}
+\footnotesize
+\item Notes: For each treatment event $m$, the control set is restricted to units that are not yet treated and that are sufficiently distant in event-time from any other AI release. ``Sufficiently distant'' is operationalized via a buffer $\bar{K}$ of months on either side, with $\bar{K}$ varied in robustness checks. Units within the spillover radius of a treated unit are not used as controls (Section~\ref{sec:methods}).
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\paragraph{Visualization.} Maps of (i) AI-classified data centers in Texas and California by hyperscaler, overlaid on HUC-8 sub-basins; (ii) water-stress (Aqueduct) overlay with data-center counts by basin; (iii) marginal generation mix in ERCOT and CAISO with thermoelectric water-consumption intensity; and (iv) the spatial weights matrix visualized as a network graph will be produced from the assembled data. These are deferred to the figure environment in the final draft and will not be fabricated here.
+
+
+\section{Methodology}
+\label{sec:methods}
+
+The empirical strategy combines three elements: (i) a techno-economic accounting that translates published WUE coefficients and electricity-water intensity factors into a benchmark water footprint for the AI build-out; (ii) a spatial difference-in-differences (SDID) estimator that identifies the causal effect of AI workloads on water outcomes while accounting for hydrologic spillovers; and (iii) a comparison framework that reconciles the engineering and econometric estimates.
+
+\subsection{Identification}
+\label{sec:identification}
+
+Let $Y_{it}$ denote a water outcome (direct withdrawal, consumption, or wastewater discharge) for unit $i$ (HUC-8 sub-basin, or county-by-supplier cell) in period $t$. Let model release $m$ occur at calendar date $r_m$. Unit $i$ is \emph{treated} in event $m$ if it contains at least one Aterio-classified AI data center owned by or contracted to the releasing firm; it is in the \emph{control} set if it has no exposure to any hyperscaler's AI activity during the event window. Under parallel trends and no-anticipation, differencing outcomes across treated and control units before and after $r_m$ identifies the average treatment effect on the treated -- modulo the spatial-spillover complication addressed below.
+
+Four features of the setting complicate a textbook DiD, paralleling the energy companion but with a fifth water-specific complication.
+
+\begin{enumerate}
+\item \textbf{Unobserved training windows.} The release date $r_m$ is an imprecise proxy for the unobserved training start. We therefore estimate dynamic event-study coefficients at multiple horizons rather than imposing a single discontinuity \citep{cengiz2019effect,deshpande2019screened}.
+
+\item \textbf{Staggered timing with heterogeneous effects.} Releases are staggered across firms and calendar time. Under treatment-effect heterogeneity, standard two-way fixed effects estimators weight already-treated units as implicit controls for later-treated units, biasing the average treatment effect \citep{goodman2021difference,sun2021treatment,callaway2021difference,borusyak2024revisiting}. We follow the stacked-cohort design of \citet{cengiz2019effect} and \citet{wing2024stacked}, with the Callaway--Sant'Anna estimator \citep{callaway2021difference} as the primary robustness check.
+
+\item \textbf{Parallel trends in water markets.} Water use exhibits secular trends from drought cycles, agricultural rotation, urban growth, and -- in California -- SGMA-induced curtailment that may correlate with data-center siting. Identification therefore relies on (a) pre-trend tests using estimated leads, (b) placebo tests with randomized treatment dates and locations, and (c) controls for climate variables (wet-bulb temperature, precipitation, PDSI), basin-level economic activity, and administrative water-supply conditions (curtailment orders, SGMA basin status).
+
+\item \textbf{Treatment exposure construction.} As in the energy companion, no dataset directly links model releases to facility-level water use. Treatment is constructed from the Aterio AI classification and the hyperscaler ownership crosswalk described in Section~\ref{sec:datasetconstruction}.
+
+\item \textbf{Spatial spillovers (water-specific).} Water moves through hydrologic and hydraulic networks. A withdrawal in one HUC-8 may reduce streamflow downstream; a discharge propagates along the river network; an aquifer drawdown affects all overlying users. The Stable Unit Treatment Value Assumption (SUTVA) is therefore violated by construction. The classical DiD estimator, which implicitly treats units as independent, both biases the average treatment effect and conflates direct effects with spillovers \citep{butts2023did,delgado2015did}. The spatial DiD specification below addresses this.
+\end{enumerate}
+
+\subsection{Spatial Difference-in-Differences}
+\label{sec:sdid}
+
+The baseline spatial specification follows \citet{delgado2015did} and is extended for staggered timing following \citet{butts2023did}. Let $W$ denote the $N \times N$ row-standardized spatial weights matrix constructed from hydrologic and hydraulic connectivity (Section~\ref{sec:datasetconstruction}). Let $\mathbf{Y}_t$, $\mathbf{D}_t$, $\mathbf{X}_t$, and $\boldsymbol{\varepsilon}_t$ denote the $N$-vectors of outcomes, treatment indicators, controls, and errors in period $t$.
+
+\paragraph{Spatial Lag of $X$ (SLX) DiD.} The simplest spatial extension augments the standard DiD with spatial lags of the treatment indicator:
+\begin{equation}
+Y_{it} = \alpha_i + \delta_t + \beta D_{it} + \theta (WD)_{it} + \mathbf{X}_{it}'\gamma + \varepsilon_{it},
+\label{eq:slx}
+\end{equation}
+where $\beta$ captures the direct (local) effect of treatment and $\theta$ captures the spillover effect on units connected to a treated unit. This is the workhorse specification because $\beta$ and $\theta$ are interpretable as the direct ATT and the indirect ATT, respectively, under the identification assumptions in \citet{butts2023did}.
+
+\paragraph{Spatial Autoregressive (SAR) DiD.} If outcomes are themselves spatially dependent -- water levels in adjacent units co-move because of shared hydrology -- the SAR specification is appropriate:
+\begin{equation}
+Y_{it} = \rho (W\mathbf{Y})_{it} + \alpha_i + \delta_t + \beta D_{it} + \mathbf{X}_{it}'\gamma + \varepsilon_{it},
+\label{eq:sar}
+\end{equation}
+where $\rho$ is the spatial autoregressive parameter. The reduced form is $\mathbf{Y}_t = (I - \rho W)^{-1}[\boldsymbol{\alpha} + \delta_t \mathbf{1} + \beta \mathbf{D}_t + \mathbf{X}_t \gamma + \boldsymbol{\varepsilon}_t]$, which implies that the marginal effect of treating unit $j$ on the outcome of unit $i$ is given by the $(i,j)$ entry of $\beta (I - \rho W)^{-1}$. Following \citet{lesage2014interpretation} and \citet{lesage2009introduction}, the direct, indirect, and total impacts are summarized by:
+\begin{align}
+\text{Direct effect} &= \tfrac{1}{N} \text{tr}\!\left[\beta (I - \rho W)^{-1}\right], \label{eq:directeffect}\\
+\text{Indirect effect} &= \tfrac{1}{N} \mathbf{1}'\!\left[\beta (I - \rho W)^{-1}\right]\!\mathbf{1} - \text{Direct effect}, \label{eq:indirecteffect}\\
+\text{Total effect} &= \text{Direct effect} + \text{Indirect effect}. \label{eq:totaleffect}
+\end{align}
+
+\paragraph{Spatial Durbin Model (SDM) DiD.} The SDM nests both SLX and SAR by including spatial lags of both the outcome and the regressors:
+\begin{equation}
+Y_{it} = \rho (W\mathbf{Y})_{it} + \alpha_i + \delta_t + \beta D_{it} + \theta (WD)_{it} + \mathbf{X}_{it}'\gamma + (W\mathbf{X})_{it}'\boldsymbol{\eta} + \varepsilon_{it}.
+\label{eq:sdm}
+\end{equation}
+The SDM is the preferred default in the spatial econometrics literature \citep{elhorst2010applied,lesage2009introduction} because it is consistent under the broadest set of misspecifications and nests SLX (when $\rho=0$) and SAR (when $\theta=\boldsymbol{\eta}=\mathbf{0}$). Specification tests (LR, Wald, common-factor) are reported to discriminate among SLX, SAR, SEM (spatial error), and SDM.
+
+\paragraph{Staggered Spatial DiD.} For staggered treatment with heterogeneous effects, We follow \citet{butts2023did} and estimate cohort-specific spatial event-study coefficients. For each event $m$, define $D_{it}^k = \mathbf{1}\{\text{event-time}=k\}\times \text{Treated}_i$ and its spatial lag $(WD)_{it}^k$. The stacked spatial event-study is:
+\begin{equation}
+Y_{i,t,m} = \alpha_{i,m} + \delta_{t,m} + \sum_{k=-K, k \neq -1}^{K} \left[\beta_k D_{it}^k + \theta_k (WD)_{it}^k\right] + \mathbf{X}_{it}'\gamma + \varepsilon_{it,m},
+\label{eq:sdid_event}
+\end{equation}
+where $\alpha_{i,m}$ are unit-by-event fixed effects, $\delta_{t,m}$ are time-by-event fixed effects, $\{\beta_k\}$ trace the dynamic direct effect, and $\{\theta_k\}$ trace the dynamic spillover effect. Standard errors are clustered at the spatial unit level (HUC-8 or county-supplier cell) to allow for arbitrary serial correlation, with two-way clustering on unit and event as a robustness check.
+
+\subsection{Outcome Equations}
+\label{sec:outcomes}
+
+I estimate Equation~\eqref{eq:sdid_event} separately for each of the following outcomes, all measured at the HUC-8 by month level unless otherwise specified.
+
+\paragraph{Direct water consumption.}
+\begin{equation}
+\text{WaterUse}_{i,t,m} = \alpha_{i,m} + \delta_{t,m} + \sum_{k} \left[\beta_k^{W} D_{it}^k + \theta_k^{W} (WD)_{it}^k\right] + \mathbf{X}_{it}'\gamma^{W} + \varepsilon^{W}_{it,m}.
+\label{eq:water_eventstudy}
+\end{equation}
+$\text{WaterUse}_{it}$ is total reported water withdrawal (or consumption, in separate specifications) in unit $i$ in month $t$, in million gallons. Controls $\mathbf{X}_{it}$ include wet-bulb temperature, precipitation, PDSI, basin-level GDP, irrigated acreage, and indicator for active drought emergency.
+
+\paragraph{Sector-disaggregated water use.} Both Texas and California report withdrawals separately for municipal, manufacturing, mining, steam-electric, irrigation, and livestock categories. The expectation is that the direct effect $\beta_k^W$ loads on the municipal-industrial or manufacturing category (depending on facility classification), and that the spillover $\theta_k^W$ may load on irrigation or steam-electric (through competition for the same supply). We estimate Equation~\eqref{eq:water_eventstudy} separately for each sector to allow this decomposition.
+
+\paragraph{Wastewater discharge.}
+\begin{equation}
+\text{Discharge}_{i,t,m} = \alpha_{i,m} + \delta_{t,m} + \sum_{k} \left[\beta_k^{D} D_{it}^k + \theta_k^{D} (WD)_{it}^k\right] + \mathbf{X}_{it}'\gamma^{D} + \varepsilon^{D}_{it,m}.
+\label{eq:discharge_eventstudy}
+\end{equation}
+$\text{Discharge}_{it}$ is permitted wastewater discharge, in MGD, from NPDES-permitted facilities within the unit.
+
+\paragraph{Indirect water use through the grid.} Indirect water consumption attributable to AI demand cannot be directly observed; it is constructed by combining the energy companion's estimates of marginal fossil generation impacts with thermoelectric water-consumption factors. Formally, let $\widehat{\Delta E}_{it}^{f}$ denote the energy companion's estimated incremental generation by fuel $f$ in zone $z(i)$ at time $t$, and let $\omega_f^{\text{water}}$ denote the technology-specific water-consumption factor from \citet{jin2019water}. Then the estimated indirect water footprint of AI in unit $i$ is:
+\begin{equation}
+\widehat{\text{IndirectWater}}_{it} = \sum_{f \in \mathcal{F}} \omega_f^{\text{water}} \cdot \widehat{\Delta E}_{it}^{f},
+\label{eq:indirect}
+\end{equation}
+where $\mathcal{F}$ ranges over the relevant generation technologies (combined-cycle gas, simple-cycle gas, coal, nuclear, etc.). Equation~\eqref{eq:indirect} is constructed deterministically from primary estimates; uncertainty is propagated by bootstrap, drawing jointly from the empirical distribution of $\widehat{\Delta E}$ (from the energy companion) and the meta-analytic distribution of $\omega_f^{\text{water}}$ (from \citealp{jin2019water}).
+
+\subsection{Techno-economic Accounting}
+\label{sec:techno}
+
+In parallel with the econometric estimates, We construct a literature-based techno-economic estimate of AI water consumption. Let $\text{WUE}_j$ denote the (annualized) water-usage effectiveness for facility $j$, expressed as liters of water per kWh of IT energy. Let $E_j(t)$ denote the IT energy consumption of facility $j$ in month $t$ in kWh, and let $\text{IT}_j(t) = \phi_j \cdot \text{Capacity}_j \cdot \text{Util}_j(t)$, where $\phi_j$ is the IT-energy share of total energy (the reciprocal of PUE), $\text{Capacity}_j$ is the rated power in MW, and $\text{Util}_j(t)$ is the load factor. The literature-based direct water footprint is then:
+\begin{equation}
+\text{TE-Direct}_{it} = \sum_{j \in i} \text{WUE}_j \cdot \phi_j \cdot \text{Capacity}_j \cdot \text{Util}_j(t) \cdot \Delta t,
+\label{eq:tedirect}
+\end{equation}
+where the sum is over facilities $j$ in unit $i$. Indirect water consumption is constructed analogously using $\omega_f^{\text{water}}$ and the facility's grid mix. WUE values are drawn from the literature: \citet{li2023making}, \citet{mytton2021data}, \citet{lei2025water}, \citet{shumba2025water}, \citet{herrera2025sustainable}, and the Ceres compilation \citep{ceres_drained_by_data_2025}, with hyperscaler-disclosed values used where available.
+
+A central object of the paper is the comparison between the econometric estimate (Equation~\eqref{eq:water_eventstudy}, aggregated to the same panel structure) and the techno-economic estimate (Equation~\eqref{eq:tedirect}). Differences may arise from any of the following:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Coverage gaps.} WUE values are reported as fleet annual averages and may not capture instantaneous or seasonal peaks.
+\item \textbf{Behavioral responses.} The econometric estimate captures equilibrium adjustments by other users (substitution, conservation, curtailment) that the engineering accounting does not.
+\item \textbf{Reporting bias.} Self-reported WUE values are subject to selection: facilities with worse water performance disclose less.
+\item \textbf{Spatial spillovers.} The engineering accounting cannot, by construction, capture the indirect effects on neighboring units that Equation~\eqref{eq:water_eventstudy} identifies through $\theta_k$.
+\item \textbf{Indirect-water coverage.} The engineering accounting typically attributes indirect water at average grid intensity; the econometric estimate plus Equation~\eqref{eq:indirect} captures the marginal generation response.
+\end{enumerate}
+The decomposition analysis (Section~\ref{sec:comparison}) attributes the gap between $\widehat{\beta}^{W}$ and the techno-economic benchmark to these channels.
+
+\subsection{Comparison Framework}
+\label{sec:comparison}
+
+Define $\widehat{\Delta}^{\text{econ}}_i$ as the econometric total effect of AI activity on water use in unit $i$, aggregating direct and indirect spatial effects from Equation~\eqref{eq:water_eventstudy} per LeSage--Pace impact formulas (Equations~\ref{eq:directeffect}--\ref{eq:totaleffect}), and $\widehat{\Delta}^{\text{te}}_i$ as the corresponding techno-economic estimate from Equation~\eqref{eq:tedirect} aggregated over the matching time window. The gap $\Delta\Delta_i = \widehat{\Delta}^{\text{econ}}_i - \widehat{\Delta}^{\text{te}}_i$ is decomposed via:
+\begin{equation}
+\Delta\Delta_i = \underbrace{\widehat{\theta}_i^{W}}_{\text{spillover}} + \underbrace{(\widehat{\Delta}^{\text{indirect,econ}}_i - \widehat{\Delta}^{\text{indirect,te}}_i)}_{\text{marginal vs.\ average indirect}} + \underbrace{(\widehat{\beta}_i^{W} - \widehat{\Delta}^{\text{te,direct}}_i)}_{\text{direct-effect gap}},
+\label{eq:decomposition}
+\end{equation}
+where the spillover and indirect terms are observable from the SDID estimates and from Equation~\eqref{eq:indirect}, and the direct-effect gap is the residual attributable to coverage, reporting, and behavioral channels. The decomposition is reported by sector (municipal-industrial vs.\ steam-electric vs.\ irrigation) and by water-stress class (Aqueduct).
+
+\subsection{Inference}
+\label{sec:inference}
+
+Standard errors for the SDID estimator are constructed by clustering at the unit level, with two-way clustering on unit and event in robustness. Inference on direct and indirect effects in the SDM follows the simulation approach of \citet{lesage2014interpretation}: We draw from the asymptotic distribution of $(\widehat{\beta}, \widehat{\theta}, \widehat{\rho})$ and compute the implied direct, indirect, and total effects, reporting 95\% confidence intervals from the simulated distribution. For the techno-economic benchmark, uncertainty is propagated via parametric bootstrap drawing $\text{WUE}_j$ and $\omega_f^{\text{water}}$ from log-normal distributions calibrated to the literature meta-analyses.
+
+
+\section{From Micro to Macro: Hydrologic and Economic Propagation}
+\label{sec:macro}
+
+The micro-econometric estimates in Section~\ref{sec:methods} identify causal effects at the HUC-8 / county-supplier level. To evaluate national-scale impacts and economy-wide propagation, We link these estimates to two existing frameworks: NOAA's National Water Model for continental-scale hydrologic propagation, and the Water Economy Simulation Tool for general-equilibrium economic impacts. The micro estimates are intentionally used twice -- once with the econometric coefficients and once with the literature-based techno-economic coefficients -- to produce parallel macro estimates that can be compared.
+
+\subsection{National Water Model Forcing}
+\label{sec:nwm}
+
+NOAA's National Water Model (NWM) is a continental-scale hydrologic modeling framework based on the WRF-Hydro architecture, providing operational streamflow guidance for $\sim 2.7$ million NHDPlus reaches and water-budget components at high spatial and temporal resolution across the conterminous United States \citep{cosgrove2024nwm}. NWM v3 is currently operational; the transition to the model-agnostic NextGen framework is in progress \citep{cosgrove2024nwm}.
+
+I use NWM in a forcing rather than a forecasting mode. The micro estimates $\widehat{\beta}_k^{W}$, $\widehat{\theta}_k^{W}$, and $\widehat{\Delta}^{\text{econ}}$ provide unit-level water-withdrawal anomalies attributable to AI activity. Combined with my data-center inventory (Section~\ref{sec:datasetconstruction}) and published projections of national data-center capacity additions \citep{EPRI2024,herrera2025sustainable}, We construct counterfactual withdrawal time-series at the NWM hydrofabric resolution. Specifically, for each NHDPlus reach $r$ and time $t$:
+\begin{equation}
+\widehat{\text{Withdrawal}}_{r,t}^{\text{AI}} = \sum_{j \in r} \widehat{\Delta}^{\text{econ}}_{i(j)} \cdot \text{Capacity}_j(t) \cdot \text{Util}_j(t),
+\label{eq:nwmforcing}
+\end{equation}
+where $j$ indexes data centers and $i(j)$ is the HUC-8 unit containing facility $j$. These withdrawal anomalies are passed to NWM as additional sinks on the relevant reaches. The model is run for the historical period (back-cast) to validate against observed streamflow anomalies in basins with AI build-out, and for projection horizons of 5 and 15 years using two compute-growth scenarios drawn from \citet{EPRI2024}.
+
+\paragraph{Outputs.} The NWM run produces (i) streamflow anomalies at $\sim 2.7$ million NHDPlus reaches, (ii) shallow groundwater storage anomalies, (iii) soil moisture anomalies, and (iv) evapotranspiration anomalies. These are aggregated to HUC-8 and HUC-12 for the counterfactual analysis. The same run is performed twice: once with the econometric $\widehat{\Delta}^{\text{econ}}$ and once with the techno-economic $\widehat{\Delta}^{\text{te}}$, yielding two parallel hydrologic projections whose difference quantifies the importance of using causally identified rather than engineering-based estimates.
+
+\subsection{WEST: Macroeconomic and Sectoral Propagation}
+\label{sec:west}
+
+The Water Economy Simulation Tool (WEST) is a food--energy--water nexus simulation framework that links water resource modules to sectoral economic activity, including agriculture and energy, within a tractable parameterization \citep{reimer2020west}. WEST is parsimonious in its data requirements and is designed to accept regional water-availability scenarios as forcings.
+
+We link the NWM hydrologic projections (Section~\ref{sec:nwm}) to WEST as follows. For each WEST region in Texas and California, We supply (i) the streamflow and storage anomalies from NWM, (ii) sectoral water-availability constraints implied by these anomalies and the relevant water-rights and SGMA institutional rules, and (iii) the indirect-water forcings from Equation~\eqref{eq:indirect} based on the energy companion. WEST then simulates equilibrium adjustments in:
+\begin{enumerate}[label=(\roman*)]
+\item agricultural sector output (crop mix, fallowing, irrigated acreage);
+\item energy sector output (generation by fuel type, thermoelectric water use, retirements and entry);
+\item municipal-industrial demand and rationing;
+\item food prices and farm income; and
+\item state-level GDP, employment, and trade balances.
+\end{enumerate}
+
+WEST is run under each of the counterfactual scenarios in Section~\ref{sec:counterfactuals}, with the econometric and techno-economic forcings as parallel inputs. The reported macro impacts are the differences between the AI-counterfactual and the no-AI baseline; the comparison of econometric vs.\ techno-economic forcings disciplines the WEST output.
+
+\paragraph{Linkage diagram.}
+\begin{figure}[htbp]
+\centering
+\fbox{\begin{minipage}{0.92\textwidth}
+\begin{center}
+\textbf{Micro $\to$ Meso $\to$ Macro Linkage}
+\end{center}
+\vspace{0.5em}
+\noindent\textbf{Micro (Sec.~\ref{sec:methods}):} Spatial DiD on TX \& CA HUC-8 panel $\Rightarrow$ direct \& spillover treatment effects $\widehat{\beta}_k^W, \widehat{\theta}_k^W$ on withdrawal, consumption, and wastewater. Indirect-water imputation via Eq.~\eqref{eq:indirect}.
+
+\vspace{0.5em}
+\noindent$\Downarrow$ \emph{Withdrawal anomalies (Eq.~\ref{eq:nwmforcing}) at NHDPlus reaches}
+
+\vspace{0.5em}
+\noindent\textbf{Meso (Sec.~\ref{sec:nwm}):} NWM forced with AI withdrawal scenarios $\Rightarrow$ streamflow, groundwater, soil moisture anomalies at $\sim 2.7$M reaches; aggregated to HUC-8 / HUC-12.
+
+\vspace{0.5em}
+\noindent$\Downarrow$ \emph{Water-availability constraints to WEST regions}
+
+\vspace{0.5em}
+\noindent\textbf{Macro (Sec.~\ref{sec:west}):} WEST simulates agricultural, energy, and macro responses $\Rightarrow$ sectoral output, prices, employment, GDP impacts.
+
+\vspace{0.5em}
+\noindent\textbf{Parallel runs:} Each stage is run with both $\widehat{\Delta}^{\text{econ}}$ and $\widehat{\Delta}^{\text{te}}$ forcings.
+\end{minipage}}
+\caption{Micro-meso-macro linkage. Figure replaces a TikZ flow diagram to be produced in the final draft.}
+\label{fig:linkage}
+\end{figure}
+
+\section{Validating Assumptions and Robustness Checks}
+\label{sec:robustness}
+
+The credibility of the SDID estimates rests on parallel trends, the no-anticipation assumption, the appropriateness of the spatial weights, and the robustness of the comparison to alternative treatment definitions. This section describes the validation strategy in parallel with the energy companion's robustness battery.
+
+\subsection{Pre-Trends and Parallel Trends}
+\label{sec:pretrends}
+
+Equation~\eqref{eq:sdid_event} estimates dynamic event-study coefficients $\{\beta_k, \theta_k\}_{k=-K}^{K}$. Under parallel trends, the pre-period coefficients $\{\beta_k, \theta_k : k < 0\}$ should be statistically indistinguishable from zero. We report pre-period coefficients and tests of joint significance for both the direct and spillover components. Systematic pre-trends would indicate anticipatory effects, confounding from correlated unobservables (e.g., differential drought exposure of treated and control units), or differential pre-existing trends. Where pre-trends are detected, We report results under the alternative-pre-trends framework of \citet{rambachan2023more}.
+
+\subsection{Placebo Tests}
+\label{sec:placebo}
+
+Three classes of placebo tests are run, paralleling the energy companion.
+
+\textbf{Randomized treatment dates.} We re-estimate Equation~\eqref{eq:sdid_event} with treatment dates drawn uniformly at random over a five-year pre-AI window, conditional on the same unit set. Under the null of no AI effect, the distribution of estimated $\widehat{\beta}_k$ across $1{,}000$ Monte Carlo draws should be centered at zero; the realized estimate should fall in the tail of this distribution.
+
+\textbf{Randomized treated units.} We randomly assign treatment status to non-AI HUC-8 units in TX/CA. Estimated effects should be centered at zero.
+
+\textbf{Non-AI data center placebo.} We run Equation~\eqref{eq:sdid_event} on units containing only non-AI data centers (e.g., colocation or storage-focused facilities by Aterio classification), holding all else equal. A significant effect in this placebo would suggest that the AI classification is not adding identifying variation.
+
+\subsection{Spatial Weights Sensitivity}
+\label{sec:weights}
+
+The baseline $W$ matrix encodes hydrologic connectivity (shared HUC-8 boundary, NHDPlus downstream relationship, shared groundwater sub-basin). Robustness checks vary the spatial weights:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{$k$-nearest-neighbor.} $W_{ij} = 1/k$ if $j$ is among the $k$ nearest neighbors of $i$ by Euclidean distance; zero otherwise. $k$ varied over $\{4, 6, 8\}$.
+\item \textbf{Inverse-distance.} $W_{ij} = d_{ij}^{-1}$ for $d_{ij} \leq \bar{d}$; zero otherwise. $\bar{d}$ varied over $\{50, 100, 200\}$ km.
+\item \textbf{Flow-direction only.} $W_{ij} = 1$ if $j$ is directly downstream of $i$ along NHDPlus; zero otherwise.
+\item \textbf{Groundwater-basin only.} $W_{ij} = 1$ if $i$ and $j$ overlie the same managed groundwater sub-basin.
+\end{enumerate}
+Consistency of $\widehat{\beta}_k$ and qualitatively similar patterns of $\widehat{\theta}_k$ across weights provides evidence that the spatial structure is not an artifact of weight construction.
+
+\subsection{Sensitivity to Treatment Definition}
+\label{sec:treatmentdef}
+
+Following the energy companion, We report results under three increasingly strict treatment definitions:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Baseline:} all Aterio AI-classified hyperscaler data centers.
+\item \textbf{Confirmed locations:} restricted to facilities with publicly confirmed AI training activity.
+\item \textbf{Verified dates:} restricted to events with verified training/release windows from corporate disclosures or API release records.
+\end{enumerate}
+Attenuation under stricter definitions is expected and would be consistent with classical measurement error.
+
+\subsection{Callaway--Sant'Anna Estimator}
+\label{sec:cs}
+
+As a robustness check, We report Callaway--Sant'Anna group-time average treatment effects \citep{callaway2021difference} for the non-spatial component of the model, with cohort defined by the firm and quarter of first AI model release. This serves as a check on the stacked estimator.
+
+\subsection{Anomaly Detection}
+\label{sec:anomaly}
+
+Following the energy companion, We run univariate time-series anomaly detection on the water outcomes (e.g., a STL+ESD or Twitter AnomalyDetection-style decomposition) over the pre-treatment period for each treated unit, and verify that the post-treatment period contains anomalies clustered around release dates that are not present in matched controls.
+
+\subsection{Identification Threats Specific to Water}
+\label{sec:waterthreats}
+
+Three identification threats are particular to the water setting:
+
+\textbf{Drought regimes.} Both Texas and California have experienced significant droughts during the sample period. If treated and control units differ in drought exposure, this confounds the AI effect. We include PDSI and curtailment-order indicators as controls, and run sub-sample analyses restricted to non-drought years.
+
+\textbf{Administrative curtailment.} SGMA in California and TCEQ priority-call procedures in Texas can administratively curtail water rights. We include indicators for curtailment status and run the analysis separately for facilities not subject to active curtailment.
+
+\textbf{Self-supply versus utility-supply.} Facilities that hold direct water rights respond to scarcity differently than facilities served by municipal utilities. We run the analysis separately by supply mode where the data permit.
+
+
+\section{Counterfactual Analyses}
+\label{sec:counterfactuals}
+
+The micro-meso-macro architecture (Figure~\ref{fig:linkage}) supports a coherent set of counterfactual exercises. Each counterfactual perturbs an input parameter and re-runs the chain. We emphasize five scenarios, each motivated by an active policy or technical lever; results will be reported as differences from the no-intervention AI baseline along the three outcome layers (water withdrawal at HUC-8; streamflow and storage anomalies from NWM; sectoral and macro outcomes from WEST).
+
+\subsection{Increases in Water Efficiency of Data Centers}
+\label{sec:cf_efficiency}
+
+Cooling technology choice is the dominant facility-level lever on direct water consumption. We run the counterfactual chain under three efficiency scenarios:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Air-cooled / free-cooling diffusion.} WUE values reduced toward published values for air-cooled facilities, applied to a share $\pi$ of capacity, with $\pi \in \{0.25, 0.5, 1.0\}$.
+\item \textbf{Liquid cooling adoption.} WUE values reduced toward direct-to-chip liquid cooling estimates from the literature.
+\item \textbf{Water-positive commitments.} Hyperscaler-announced water-restoration commitments treated as an effective reduction in net consumption.
+\end{enumerate}
+For each, We re-scale $\widehat{\beta}^{W}$ proportionally to the change in fleet-average WUE (under the engineering channel) and re-run NWM and WEST. The output is the share of micro and macro water impacts that can be offset by cooling-technology improvements alone, and how this varies by basin.
+
+\subsection{Siting Restrictions and Data-Center Moratoria}
+\label{sec:cf_siting}
+
+I evaluate two policy regimes:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Water-stress conditioning of permits.} New permits in HUC-8 units classified as ``high'' or ``extremely high'' water stress by Aqueduct are denied; capacity additions are redirected toward lower-stress units.
+\item \textbf{Local moratoria.} County- or basin-level moratoria modeled on those emerging in rural Ohio and Iowa \citep{OhioSignal2025,WFMJ2025} are applied to specified Texas and California counties; capacity is reallocated to non-moratorium units within the same state.
+\end{enumerate}
+The chain returns the residual macro impact under each policy and the displacement to other basins.
+
+\subsection{Geographic Reallocation of Compute}
+\label{sec:cf_geo}
+
+Parallel to the energy companion's edge-inference and East-to-Center reallocation counterfactuals, We evaluate:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Reallocation from CA/TX to water-abundant regions.} Training compute redistributed to states with low Aqueduct water stress, with adjustment for the change in marginal generator water-consumption factor at the destination grid.
+\item \textbf{Edge inference reallocation.} Inference shifted from concentrated hyperscaler facilities in TX/CA to distributed smaller facilities closer to population centers, with WUE adjustment for typical edge-facility cooling.
+\end{enumerate}
+The counterfactual surfaces the trade-off between direct water savings and any indirect water cost arising from a less-efficient marginal generator at the destination.
+
+\subsection{Water-Scarcity Pricing and Tradable Rights}
+\label{sec:cf_pricing}
+
+Currently neither Texas nor California prices municipal-industrial water at marginal scarcity. The counterfactual introduces scarcity pricing at three levels: (i) full marginal-cost pricing using shadow values implied by the SGMA / TCEQ administrative curtailment thresholds, (ii) a Pigouvian markup equal to the agricultural opportunity cost of water in stressed basins, and (iii) tradable water rights with market clearing among data centers, agriculture, and municipal users. The WEST module is well-suited to this counterfactual because it endogenizes inter-sectoral water allocation; We supply the data-center WUE-adjusted demand schedule from the micro estimates and report the equilibrium reallocation across sectors.
+
+\subsection{Changes at the Water--Energy Nexus}
+\label{sec:cf_nexus}
+
+The final set of counterfactuals operates at the water--energy nexus by jointly perturbing the energy and water layers:
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Behind-the-meter generation adoption.} Drawing on the energy companion's finding that on-site colocated generation substantially mitigates grid impacts, We evaluate the water implications: on-site combustion turbines may increase local water consumption (or substitute air cooling for the data center's evaporative cooling), and on-site solar reduces both direct and indirect water draw. We implement this by jointly perturbing the marginal generator water-consumption factor and the facility-level WUE.
+\item \textbf{Generation-mix shifts.} We evaluate how shifts in the marginal generator -- toward solar, toward gas with dry cooling, or toward nuclear with once-through cooling -- propagate through Equation~\eqref{eq:indirect} into the macro layer. This is the most direct test of the importance of indirect water consumption in shaping the total AI footprint.
+\item \textbf{Curtailment-linked AI scheduling.} We evaluate the implications of scheduling AI workloads (particularly training) to coincide with renewable surplus and curtailment events, both of which reduce marginal-generator water intensity.
+\end{enumerate}
+
+\subsection{Comparison of Econometric vs.\ Techno-economic Counterfactual Results}
+\label{sec:cf_compare}
+
+For each counterfactual, the chain is run with both the econometric ($\widehat{\Delta}^{\text{econ}}$) and the techno-economic ($\widehat{\Delta}^{\text{te}}$) forcings. The difference between the two macro outputs is reported as a measure of how much policy conclusions depend on the choice of micro-level estimation strategy. The expectation -- given the analytic decomposition in Equation~\eqref{eq:decomposition} -- is that the econometric forcing produces larger total impacts because it captures spillovers and the marginal-generator indirect water response, both of which the techno-economic approach misses.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper provides the first causal, spatially explicit estimates of how AI data centers affect direct and indirect water use in Texas and California, and links those estimates to continental-scale hydrologic and macroeconomic propagation. The key methodological contribution is the use of spatial difference-in-differences with hydrologically informed weights to identify both the direct effect of an AI data center on the water budget of its own basin and the indirect effect on connected basins. The key empirical contribution is the parallel construction of econometric and techno-economic estimates, which allows quantification of where literature-based engineering coefficients understate or overstate the true water footprint, and decomposition of the gap into spillover, marginal-vs.-average indirect, and direct-effect channels.
+
+For policy, the contribution is a coherent counterfactual architecture that links facility-level efficiency improvements, siting policies, compute reallocation, water-scarcity pricing, and water-energy nexus interventions through the same micro estimates, hydrologic model, and macro framework. The intended use is to enable policymakers in both states -- and in the federal agencies responsible for the NWM and for energy and water planning -- to evaluate the available levers on common terms.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\textbf{Treatment definition.} Following the energy companion, We cannot observe the actual training or inference location for any given model. The treatment is the AI-classified hyperscaler facility footprint, and the treatment date is the public release. Estimates are interpretable as average effects across the firm's AI footprint and as lower bounds on the localized effect at any actual training site. The robustness battery in Section~\ref{sec:robustness} probes this, but does not eliminate it.
+
+\textbf{Water-data lags.} Texas and California report water use on annual cycles for many sector categories; some categories are reported quarterly or monthly. This is finer than USGS NWUIP (5-year cycle) but coarser than the energy data. The temporal resolution of the SDID is therefore typically monthly to quarterly rather than daily, which limits identification of short-run dynamic effects such as those associated with single training runs. Higher-frequency wastewater reporting through eDMR partially compensates.
+
+\textbf{Indirect-water coverage.} Equation~\eqref{eq:indirect} relies on the energy companion's identification of marginal generation and on \citet{jin2019water}'s water-consumption factors. Both are noisy and the bootstrap procedure described in Section~\ref{sec:inference} captures only first-order uncertainty.
+
+\textbf{NWM and WEST limitations.} NWM v3 has documented skill limitations in parts of the Intermountain West; calibration of the AI forcings should be cross-checked against USGS NWIS observations where possible. WEST is a parsimonious nexus model and does not endogenize all relevant adjustment margins; its outputs should be interpreted as scenario simulations rather than as forecasts.
+
+\textbf{External validity.} Results are estimated on Texas and California. Both are leading data-center markets in the Western U.S.\ but they are not representative of all U.S.\ jurisdictions; in particular, the Eastern Interconnection and humid southeastern states have different cooling regimes, water institutions, and grid mixes. Extension to other jurisdictions is an explicit objective of the future work below.
+
+\textbf{Political-economy variables.} The empirical model does not directly endogenize political constraints on water allocation. Where binding political constraints (moratoria, allocation orders, election-driven changes in PSC composition) materially affect outcomes, the SDID will capture the equilibrium effect but will not separate the political and the economic channels.
+
+\subsection{Future Research}
+\label{sec:future}
+
+Four extensions are immediate.
+
+\textbf{Other Western states.} Arizona, Nevada, Oregon, and Washington host large and growing data-center footprints. Extending the SDID to these states is largely a data-acquisition problem; the methodology is portable.
+
+\textbf{High-frequency water sensing.} Emerging remote-sensing and on-site sensor data on facility cooling-water use could move the analysis to monthly or weekly frequency, enabling identification of training-event-specific effects on the water side parallel to those already identifiable on the energy side.
+
+\textbf{Endogenous siting.} The current analysis treats data-center locations as fixed conditional on the panel. Endogenizing siting -- as a function of water availability, electricity prices, and political constraints -- would allow welfare analysis of the social planner's siting problem and engage the broader water-economics market design literature.
+
+\textbf{Joint structural model.} The natural follow-on is a structural model of joint electricity-and-water demand for data centers in which firms make cooling-technology, siting, and procurement decisions in response to spatially varying prices for both inputs. The micro estimates in this paper and the parallel energy companion provide the reduced-form moments such a structural model would target.
+
+\bibliographystyle{apalike}
+\bibliography{Water,references,Methods}
+
+\end{document}
