@@ -1,0 +1,44 @@
+# Raw data and large binaries stay out of version control (CLAUDE.md §4, §7).
+Data/
+data/
+*.gdb/
+*.csv
+*.parquet
+*.gpkg
+*.shp
+*.dbf
+*.shx
+*.prj
+*.zip
+
+# Keep curated example/config CSVs if ever needed (negate explicitly):
+!config.example.yaml
+
+# Generated analysis outputs
+outputs/
+*.xlsx
+# (committed reference figure is force-added; new PNGs are ignored)
+*.png
+!water_stress_analysis.png
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Environments
+.venv/
+venv/
+env/
+.env
+
+# Local config (paths point at a developer's machine)
+config.yaml
+config.local.yaml
