@@ -1,0 +1,55 @@
+# Drinking Data — example configuration.
+#
+# Copy to `config.yaml` (git-ignored) and edit the paths to point at your local
+# data directory. Raw data is NOT committed to the repo (CLAUDE.md §4).
+#
+# Resolution order for every setting:
+#   explicit argument  >  config.yaml  >  DRINKINGDATA_* env var  >  default
+
+# Root of the (uncommitted) raw data tree. Everything below is resolved
+# relative to this unless given as an absolute path.
+data_dir: /path/to/Data
+
+# Where the pipeline writes figures, tables, and intermediate panels.
+outputs_dir: ./outputs
+
+# --- Input file locations (relative to data_dir unless absolute) -------------
+paths:
+  aterio_inventory: data_center_inventory_20251217.csv   # Aterio DC inventory
+  epoch_models: "Epoch Database - Notable Models.csv"     # Epoch AI releases
+  aqueduct_csv: Aqueduct40_baseline_annual_y2023m07d05.csv
+
+  # Texas
+  twdb_water_glob: "SumFinal_CountyReportWithReuse*.csv"   # TWDB water-use survey
+  tx_county_shp: Texas_County_Boundaries/Texas_County_Boundaries.shp
+
+  # California (to be added — CLAUDE.md §5.1)
+  ca_swrcb_csv: null
+  ca_sgma_basins: null
+
+  # Hydrofabric (HUC-8 / HUC-12 / NHDPlus) — CLAUDE.md §5.2
+  huc8_shp: null
+  huc12_shp: null
+  nhdplus_flow_edges: null
+
+  # Energy companion outputs feeding the indirect-water module (§2.4)
+  energy_marginal_generation: null    # ΔÊ_f by fuel × unit × time
+  jin2019_water_factors: null         # ω_f^water consumption factors
+
+# --- Run settings ------------------------------------------------------------
+run:
+  # Primary spatial unit: one of {huc8, county_supplier, huc12}
+  spatial_unit: huc8
+  # Panel frequency (pandas offset alias)
+  freq: MS
+  # States in scope
+  states: [TX, CA]
+  # The four hyperscalers that define the treated set (§2.1)
+  hyperscalers: [Google, Microsoft, Amazon, Meta]
+  # Event-study window (periods relative to treatment)
+  event_min: -24
+  event_max: 36
+  event_omit: -1
+  # Capacity-dose transform: one of {level, log1p, sqrt}
+  cap_transform: log1p
+  random_seed: 20240101

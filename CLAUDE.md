@@ -100,9 +100,19 @@ verified dates), Callaway–Sant'Anna group-time ATTs, and anomaly detection
 > **Status legend:** ✅ functional · 🟡 skeleton/partial · 🗺️ visualization ·
 > ⚠️ uses synthetic/placeholder geography that must be replaced for the paper.
 
-All code is currently flat in the repo root and **Texas-centric / US-wide
+The original code is flat in the repo root and **Texas-centric / US-wide
 exploratory**. The paper requires HUC-8 panels for *both* TX and CA with true
 hydrologic weights; see §5 for the gap.
+
+> **Package scaffolding (`drinkingdata/`).** The exploratory scripts are being
+> consolidated into an installable package whose layout follows §2/§5: `config`
+> (paths, replacing the hardcoded Windows `BASE_DIR`), `data/` (providers,
+> loaders, panel/event-time), `spatial/` (connectivity `W`, point-in-polygon
+> units), `estimation/` (DiD, SLX/SAR/SDM, LeSage–Pace impacts, event study),
+> `indirect/water` (§2.4), `techno_economic` (§2.5), `robustness` (§2.6), `viz/`.
+> Heavy deps are imported lazily; the pure-numeric cores are unit-tested under
+> `tests/`. See `README.md`. The legacy scripts below remain as references during
+> migration.
 
 ### 3.1 Data preparation & panel construction
 | File | Status | Role |
@@ -205,6 +215,6 @@ The existing code is a strong **Texas county** prototype. To realize the paper:
 
 ## 7. Git / Workflow
 
-- Active development branch: `claude/hopeful-tesla-1ijxd5`.
+- Active development branch: `claude/compassionate-darwin-590ojn`.
 - Commit with clear messages; do not open PRs unless explicitly requested.
 - Raw data and large binaries stay out of version control.

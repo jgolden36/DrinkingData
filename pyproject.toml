@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "drinkingdata"
+version = "0.1.0"
+description = "Spatial econometric analysis of AI data centers' impacts on water resources in TX and CA"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+    { name = "Golden" },
+    { name = "Varshney" },
+]
+
+# Lightweight core: the pure-numeric modules (weights math, panel construction,
+# indirect water, techno-economic benchmark, provider normalization) only need
+# these. Heavy geospatial / spatial-econometrics deps live in the [full] extra
+# and are imported lazily.
+dependencies = [
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+full = [
+    "geopandas>=0.14",
+    "shapely>=2.0",
+    "statsmodels>=0.14",
+    "linearmodels>=5.3",
+    "libpysal>=4.9",
+    "spreg>=1.4",
+    "matplotlib>=3.7",
+    "seaborn>=0.12",
+    "openpyxl>=3.1",
+]
+dev = [
+    "pytest>=7.4",
+]
+
+[project.scripts]
+drinkingdata = "drinkingdata.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["drinkingdata*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
